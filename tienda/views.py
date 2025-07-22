@@ -1,4 +1,6 @@
-from rest_framework import viewsets
+from rest_framework import viewsets, status
+from rest_framework.response import Response
+from django.shortcuts import get_object_or_404
 from .models import Categoria, Producto, Cliente, Pedido, DetallePedido
 from .serializers import CategoriaSerializer, ProductoSerializer, ClienteSerializer, PedidoSerializer, DetallePedidoSerializer
 
@@ -14,22 +16,12 @@ class ClienteViewSet(viewsets.ModelViewSet):
     queryset = Cliente.objects.all()
     serializer_class = ClienteSerializer
 
-
-from rest_framework.response import Response
-from rest_framework import status
-from rest_framework import viewsets
-from django.shortcuts import get_object_or_404
-from .models import Categoria, Producto, Cliente, Pedido, DetallePedido
-from .serializers import CategoriaSerializer, ProductoSerializer, ClienteSerializer, PedidoSerializer, DetallePedidoSerializer
-
 class PedidoViewSet(viewsets.ModelViewSet):
     queryset = Pedido.objects.all()
     serializer_class = PedidoSerializer
 
     def create(self, request, *args, **kwargs):
         detalles_data = request.data.pop("detalles", [])
-
-        # Validar y guardar el pedido principal
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         pedido = serializer.save()
@@ -41,20 +33,16 @@ class PedidoViewSet(viewsets.ModelViewSet):
             if not producto_id:
                 errores.append({"error": "Falta el campo 'producto' en un detalle"})
                 continue
-
             try:
                 producto = Producto.objects.get(id=producto_id)
-               
                 DetallePedido.objects.create(
                     pedido=pedido,
                     producto=producto,
                     cantidad=detalle.get("cantidad", 1)
                 )
-
             except Producto.DoesNotExist:
                 errores.append({"producto_id": producto_id, "error": "Producto no encontrado"})
 
-        # Recargar el pedido con sus detalles
         pedido.refresh_from_db()
         response_serializer = self.get_serializer(pedido)
 
@@ -65,8 +53,6 @@ class PedidoViewSet(viewsets.ModelViewSet):
             }, status=status.HTTP_201_CREATED)
 
         return Response(response_serializer.data, status=status.HTTP_201_CREATED)
-
-
 
 class DetallePedidoViewSet(viewsets.ModelViewSet):
     queryset = DetallePedido.objects.all()
