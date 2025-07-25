@@ -17,9 +17,12 @@ class ClienteSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class DetallePedidoSerializer(serializers.ModelSerializer):
+    producto = ProductoSerializer(read_only=True)
+
     class Meta:
         model = DetallePedido
         fields = ['producto', 'cantidad']
+
 
 
 
