@@ -14,7 +14,7 @@ class ProductoSerializer(serializers.ModelSerializer):
 class ClienteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Cliente
-        fields = '__all__'
+        fields = ['id', 'nombre']  # puedes agregar más campos si necesitas
 
 class DetallePedidoSerializer(serializers.ModelSerializer):
     producto = ProductoSerializer(read_only=True)
@@ -23,12 +23,10 @@ class DetallePedidoSerializer(serializers.ModelSerializer):
         model = DetallePedido
         fields = ['producto', 'cantidad']
 
-
-
-
 class PedidoSerializer(serializers.ModelSerializer):
+    cliente = ClienteSerializer(read_only=True)  # ✅ Expande el cliente con nombre
     detalles = DetallePedidoSerializer(many=True, read_only=True)
 
     class Meta:
         model = Pedido
-        fields = ['id', 'cliente', 'fecha', 'total', 'detalles']  # ✅ Ahora sí
+        fields = ['id', 'cliente', 'fecha', 'total', 'detalles']
